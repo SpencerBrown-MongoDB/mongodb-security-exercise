@@ -1,0 +1,19 @@
+{
+  "CN": "MongoDB CA",
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "US",
+      "L": "Austin",
+      "O": "MongoDB",
+      "OU": "Certificate Authority",
+      "ST": "Texas"
+    }
+  ],
+  "hosts": [
+    "mongodb.example.com"
+  ]
+}
