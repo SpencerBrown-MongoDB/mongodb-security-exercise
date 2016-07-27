@@ -21,8 +21,13 @@ cd tls-certs
 
 cfssl gencert -initca ../ca-csr.json | cfssljson -bare ca
 
-# generate TLS server cert, cert bundle, and key
+# generate TLS server cert, cert bundle, key, and key/cert bundle
 
 cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=../ca-config.json -profile=server ../server-csr.json | cfssljson -bare server
 cfssl bundle -ca-bundle=ca.pem -cert=server.pem | cfssljson -bare server
 cat server-key.pem server.pem > server-key-cert.pem
+
+# generate TLS client cert and key, and bundle of key/cert
+
+cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=../ca-config.json -profile=client ../client-csr.json | cfssljson -bare client
+cat client-key.pem client.pem > client-key-cert.pem

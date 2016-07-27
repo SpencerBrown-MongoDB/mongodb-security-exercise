@@ -2,11 +2,14 @@
 
 In this exercise, designed to run on OS X, we will:
 * create a mongod local server
-* create an admin user with superuser (root) authorization
-* create a TLS Certificate Authority, and a TLS CA certificate and key
+* create an admin user with superuser (root) role
+* create the X.509 client certificate defined user and give it superuser (root) role
+* create a TLS Certificate Authority, which is a TLS CA certificate and signing key
 * create a TLS server certificate and key
+* create a TLS client certificate and key
 * restart the mongod server with authentication and TLS options
-* connect to the server using the mongo shell with TLS
+* connect to the server using the mongo shell with TLS and login as the admin user
+* connect to the server using the mongo shell with TLS and login as the X.509 client cert user
 
 ## Prereqs
 
@@ -17,21 +20,23 @@ In this exercise, designed to run on OS X, we will:
 
 ## Create local mongod and admin user
 
-This will start a local mongod in non-secure mode, then we add an admin user, and shut down the server.
+This will start a local mongod in non-secure mode. 
+Then we add an admin user and password, 
+and a client certificate defined user,
+and shut down the server.
 
 ```bash
 ./mkserver.sh
-mongo --shell setupuser.js
-use admin
-db.shutdownServer()
-exit
+./add-users.sh
 ```
 
 Take a look at the two scripts to see what they are doing!
 
-In particular look at `setupuser.js`. 
+In particular look at `addusers.js`. 
 It creates the initial admin user (username "admin", password "password") and gives it the `root` role in the admin database.
 This allows the `admin` user to do *anything* on this server.
+It also creates a user that is authenticated via an X.509 client certificate, that also has the `root` role in the admin database.
+Then it shuts down the server.
 
 ## Create the CA and the TLS server certificate and key
 
@@ -44,8 +49,11 @@ This allows the `admin` user to do *anything* on this server.
 3. Creates a TLS Server Certificate and Key. Certificate is `server.pem`, key is `server-key.pem`. 
 4. Creates a Server Certificate Bundle containing the server certificate and the CA certificate. `server-bundle.pem`
 5. Creates a bundle of the Server Key and Certificate, `server-key-cert.pem`.
+6. Creates a TLS Client Certificate and Key. Certificate is `client.pem`, key is `client-key.pem`.
+7. Creates a bundle of the Client Key and Certificate, `client-key-cert.pem`.
 
-Take a look at `ca-csr.json` to see the config for the CA, and `server-csr.json` for the config for the server certificate.
+Take a look at `ca-csr.json` to see the config for the CA, `server-csr.json` for the config for the server certificate,
+and `client-csr.json` for the config for the client certificate.
 
 ## Restart the mongod with security configured
 
@@ -54,16 +62,26 @@ Take a look at `ca-csr.json` to see the config for the CA, and `server-csr.json`
 ```
 
 Read this script and see what it is doing. It turns on security with the `--auth` option, and specifies the SSL server certificate/key and the CA certificate.
-It further allows clients to connect without certificates.
+It also requires that clients connect with SSL, and have a valid client certificate.
 
-## Connect to the mongod with TLS and authentication
+## Connect to the mongod with TLS and authenticate with MongoDB defined user `admin`
 
 This connects to the mongod using TLS, and logs into the admin database with the superuser admin and its password.
 
 ```bash
-./ssl-mongo.sh
+./user-mongo.sh
 ```
-Take a look at this script and the options used there!
+Take a look at this script and the options used there! Note that the password *must* be provided.
+
+## Connect to the mongod with TLS and authenticate with the X.509 client certificate defined user
+
+This connects to the mongod using TLS, and logs into the admin database with the X.509 client certificate defined user.
+Note that there is no password! It is authenticating the user based on common trust with the CA, and the fact that the client has access to the secret key for this certificate.
+
+```bash
+./x509-mongo.sh
+```
+Take a look at this script and the options used there! Note that there is no password!
 
 ## About TLS, PKI, certificates, and keys
 
